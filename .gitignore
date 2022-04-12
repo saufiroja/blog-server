@@ -5,6 +5,10 @@
 # env
 .env
 
+# jwt
+jwt.private.key
+jwt.public.key
+
 # Logs
 logs
 *.log
