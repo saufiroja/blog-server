@@ -18,6 +18,12 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: false,
       },
+      confirmedToken: {
+        type: Sequelize.STRING,
+      },
+      expiredConfiremdToken: {
+        type: Sequelize.DATE,
+      },
       isActived: {
         type: Sequelize.ENUM('Actived', 'Pending'),
         defaultValue: 'Pending',

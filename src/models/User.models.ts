@@ -50,6 +50,16 @@ export class User extends Model {
   role: string;
 
   @Column({
+    type: DataType.NUMBER,
+  })
+  confirmedToken: number;
+
+  @Column({
+    type: DataType.DATE,
+  })
+  expiredConfiremdToken: number;
+
+  @Column({
     type: DataType.STRING,
   })
   resetPasswordToken: string;
