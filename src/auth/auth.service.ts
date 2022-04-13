@@ -35,12 +35,14 @@ export class AuthService {
     }
 
     let code = Math.floor(10000 + Math.random() * 90000);
+    const exiredDate = new Date(new Date().getTime() + 1 * 60000);
     const hash = await bcrypt.hash(password, 12);
 
     const user = await this.user.create({
       email,
       password: hash,
       confirmedToken: code,
+      expiredConfiremdToken: exiredDate,
     });
 
     const { accessToken, expiresin } = this.generateAccessToken(user.id);
