@@ -4,13 +4,15 @@ import { InjectModel } from '@nestjs/sequelize';
 import * as bcrypt from 'bcrypt';
 import { addSeconds, format } from 'date-fns';
 
+import { MailService } from '../mail/mail.service';
 import { User } from '../models/User.models';
-import { AuthDto } from './dto';
+import { LoginDto, RegisterDto } from './dto';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectModel(User) private user: typeof User,
+    private mailService: MailService,
     private jwtService: JwtService,
   ) {}
 
@@ -18,7 +20,7 @@ export class AuthService {
   // @Route   : POST api/auth/signup
   // @Access  : Public
   async signup(
-    dto: AuthDto,
+    dto: RegisterDto,
   ): Promise<{ user: User; accessToken: string; expiresin: string }> {
     const { email, password } = dto;
 
@@ -32,14 +34,18 @@ export class AuthService {
       throw new HttpException('Email already exists', HttpStatus.BAD_REQUEST);
     }
 
+    let code = Math.floor(10000 + Math.random() * 90000);
     const hash = await bcrypt.hash(password, 12);
 
     const user = await this.user.create({
       email,
       password: hash,
+      confirmedToken: code,
     });
 
     const { accessToken, expiresin } = this.generateAccessToken(user.id);
+
+    await this.mailService.sendConfirmationEmail(user, code);
 
     return {
       user,
@@ -52,7 +58,7 @@ export class AuthService {
   // @Route   : POST api/auth/login
   // @Access  : Public
   async login(
-    dto: AuthDto,
+    dto: LoginDto,
   ): Promise<{ user: User; accessToken: string; expiresin: string }> {
     const { email, password } = dto;
     const user = await this.user.findOne({
