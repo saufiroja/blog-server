@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/sequelize';
 import * as bcrypt from 'bcrypt';
 import { addSeconds, format } from 'date-fns';
+import * as crypto from 'crypto';
 
 import { MailService } from '../mail/mail.service';
 import { User } from '../models/User.models';
@@ -19,23 +20,22 @@ export class AuthService {
   // @Desc    : Signup new user
   // @Route   : POST api/auth/signup
   // @Access  : Public
-  async signup(
-    dto: RegisterDto,
-  ): Promise<{ user: User; accessToken: string; expiresin: string }> {
+  async signup(dto: RegisterDto): Promise<{ message: string }> {
     const { email, password } = dto;
 
     const isExists = await this.user.findOne({
-      where: {
-        email,
-      },
+      where: { email },
     });
 
     if (isExists) {
       throw new HttpException('Email already exists', HttpStatus.BAD_REQUEST);
     }
 
+    // confirmed token email
     let code = Math.floor(10000 + Math.random() * 90000);
     const exiredDate = new Date(new Date().getTime() + 1 * 60000);
+
+    // hash password
     const hash = await bcrypt.hash(password, 12);
 
     const user = await this.user.create({
@@ -45,14 +45,10 @@ export class AuthService {
       expiredConfiremdToken: exiredDate,
     });
 
-    const { accessToken, expiresin } = this.generateAccessToken(user.id);
-
-    await this.mailService.sendConfirmationEmail(user, code);
+    await this.mailService.sendConfirmationEmail(user, code, user.id);
 
     return {
-      user,
-      accessToken,
-      expiresin,
+      message: 'Please check email for actived your account',
     };
   }
 
@@ -69,9 +65,9 @@ export class AuthService {
       },
     });
 
-    if (!user) {
+    if (!user || user.isActived === 'Pending') {
       throw new HttpException(
-        'Invalid email or email not registered',
+        'Email not registered or Please actived your account',
         HttpStatus.BAD_REQUEST,
       );
     }
@@ -87,6 +83,33 @@ export class AuthService {
       accessToken,
       expiresin,
     };
+  }
+
+  // @Desc    : Verify your email
+  // @Routes  : POST api/auth/verify/:id
+  // @Access  : Private
+  async verifyEmail(id: any, token: any) {
+    console.log({ id, token });
+    const user = await this.user.findOne({
+      where: { id },
+    });
+
+    if (!user || !user.confirmedToken === token) {
+      throw new HttpException('Email not found', HttpStatus.NOT_FOUND);
+    }
+
+    await this.user.update(
+      {
+        isActived: 'Actived',
+        confirmedToken: null,
+        expiredConfiremdToken: null,
+      },
+      { where: { id } },
+    );
+
+    await this.mailService.sendConfirmedEmail(user);
+
+    return user;
   }
 
   // @Desc  : Generate access token
