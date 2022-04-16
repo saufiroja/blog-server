@@ -76,7 +76,10 @@ export class AuthService {
     if (!match) {
       throw new HttpException('Invalid password', HttpStatus.BAD_REQUEST);
     }
-    const { accessToken, expiresin } = this.generateAccessToken(user.id);
+    const { accessToken, expiresin } = this.generateAccessToken(
+      user.id,
+      user.role,
+    );
 
     return {
       user,
@@ -113,13 +116,13 @@ export class AuthService {
   }
 
   // @Desc  : Generate access token
-  generateAccessToken(userId: string) {
+  generateAccessToken(userId: string, role: string) {
     const { JWT_EXPIRE_IN } = process.env;
     const expiresin = format(
       addSeconds(new Date(), parseInt(JWT_EXPIRE_IN, 10) / 1000),
       'yyyy-MM-dd HH:mm:ss',
     );
-    const accessToken = this.jwtService.sign({ userId });
+    const accessToken = this.jwtService.sign({ userId, role });
     return {
       accessToken,
       expiresin,
