@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
-// import { User } from '../models/User.models';
 
 @Injectable()
 export class MailService {
@@ -20,6 +19,7 @@ export class MailService {
   }
 
   async sendConfirmationEmail(user: any, code: any, id: any) {
+    const { URL } = process.env;
     const { email } = await user;
     await this.mailerService.sendMail({
       to: email,
@@ -30,7 +30,7 @@ export class MailService {
       },
       html: `<h1>Hello ${email} </h1>
       <p>Please Confirm your email with this code ${code}, please follow the url below</p>
-      <p>http://localhost:5000/api/auth/verify/${id}</p>
+      <p>${URL}/${id}</p>
       `,
     });
   }

@@ -3,7 +3,6 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/sequelize';
 import * as bcrypt from 'bcrypt';
 import { addSeconds, format } from 'date-fns';
-import * as crypto from 'crypto';
 
 import { MailService } from '../mail/mail.service';
 import { User } from '../models/User.models';
