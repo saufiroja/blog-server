@@ -100,13 +100,16 @@ export class AuthService {
   // @Routes  : POST api/auth/verify/:id
   // @Access  : Private
   async verifyEmail(id: any, token: any) {
-    console.log({ id, token });
     const user = await this.user.findOne({
       where: { id },
     });
 
     if (!user || !user.confirmedToken === token) {
       throw new HttpException('Email not found', HttpStatus.NOT_FOUND);
+    }
+
+    if (user.expiredConfiremdToken < Date.now()) {
+      throw new HttpException('otp expired', HttpStatus.FORBIDDEN);
     }
 
     await this.user.update(
