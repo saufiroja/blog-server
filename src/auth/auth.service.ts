@@ -38,7 +38,7 @@ export class AuthService {
     let code = Math.floor(10000 + Math.random() * 90000);
     const exiredDate = new Date(new Date().getTime() + 1 * 60000);
 
-    // hash password
+    // hash password and hash code otp
     const hash = await bcrypt.hash(password, 12);
 
     const user = await this.user.create({
@@ -124,6 +124,29 @@ export class AuthService {
     await this.mailService.sendConfirmedEmail(user);
 
     return user;
+  }
+
+  // @Desc    : Resend your code
+  // @Routes  : GET api/auth/resend/:id
+  // @Access  : Private
+  async resend(id: any): Promise<{ message: string }> {
+    const user = await this.user.findOne({ where: { id } });
+    if (!user) {
+      throw new HttpException('user not found', HttpStatus.NOT_FOUND);
+    }
+
+    // confirmed token email
+    let code = Math.floor(10000 + Math.random() * 90000);
+    const exiredDate = new Date(new Date().getTime() + 1 * 60000);
+
+    await this.user.update(
+      { confirmedToken: code, expiredConfiremdToken: exiredDate },
+      { where: { id } },
+    );
+
+    await this.mailService.resendConfirmationEmail(user, code);
+
+    return { message: 'Please, check your email to get the latest code' };
   }
 
   // @Desc  : Generate access token

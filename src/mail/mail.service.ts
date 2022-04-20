@@ -30,7 +30,23 @@ export class MailService {
       },
       html: `<h1>Hello ${email} </h1>
       <p>Please Confirm your email with this code ${code}, please follow the url below</p>
-      <p>${URL}/${id}</p>
+      <p>${URL}/veirfy/${id}</p>
+      `,
+    });
+  }
+
+  async resendConfirmationEmail(user: any, code: any) {
+    const { email } = await user;
+    console.log(email);
+    await this.mailerService.sendMail({
+      to: email,
+      subject: 'Welcome to my App! Confirm Email',
+      template: 'confirm',
+      context: {
+        email,
+      },
+      html: `<h1>Hello ${email} </h1>
+      <p>Please Confirm your email with this code ${code}, please follow the url below</p>
       `,
     });
   }

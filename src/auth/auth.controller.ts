@@ -26,9 +26,7 @@ export class AuthController {
   }
 
   @Post('login')
-  login(
-    @Body() dto: LoginDto,
-  ): Promise<{
+  login(@Body() dto: LoginDto): Promise<{
     user: User;
     accessToken: string;
     expiresin: string;
@@ -40,6 +38,11 @@ export class AuthController {
   @Post('verify/:id')
   verifyEmail(@Param('id') id: any, @Body() token: string) {
     return this.authService.verifyEmail(id, token);
+  }
+
+  @Get('resend/:id')
+  resend(@Param('id') id: any) {
+    return this.authService.resend(id);
   }
 
   @UseGuards(JwtGuard)
