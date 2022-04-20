@@ -28,7 +28,12 @@ export class AuthController {
   @Post('login')
   login(
     @Body() dto: LoginDto,
-  ): Promise<{ user: User; accessToken: string; expiresin: string }> {
+  ): Promise<{
+    user: User;
+    accessToken: string;
+    expiresin: string;
+    refreshToken: string;
+  }> {
     return this.authService.login(dto);
   }
 

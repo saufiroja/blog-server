@@ -2,16 +2,20 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/sequelize';
 import * as bcrypt from 'bcrypt';
-import { addSeconds, format } from 'date-fns';
+import { addDays, addSeconds, format } from 'date-fns';
 
+import { UserRefreshToken } from '../models/UserRefreshToken.models';
 import { MailService } from '../mail/mail.service';
 import { User } from '../models/User.models';
 import { LoginDto, RegisterDto } from './dto';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectModel(User) private user: typeof User,
+    @InjectModel(UserRefreshToken)
+    private userRefreshToken: typeof UserRefreshToken,
     private mailService: MailService,
     private jwtService: JwtService,
   ) {}
@@ -54,9 +58,12 @@ export class AuthService {
   // @Desc    : Login user
   // @Route   : POST api/auth/login
   // @Access  : Public
-  async login(
-    dto: LoginDto,
-  ): Promise<{ user: User; accessToken: string; expiresin: string }> {
+  async login(dto: LoginDto): Promise<{
+    user: User;
+    accessToken: string;
+    expiresin: string;
+    refreshToken: string;
+  }> {
     const { email, password } = dto;
     const user = await this.user.findOne({
       where: {
@@ -79,11 +86,13 @@ export class AuthService {
       user.id,
       user.role,
     );
+    const refreshToken = await this.generateRefreshToken(user.id);
 
     return {
       user,
       accessToken,
       expiresin,
+      refreshToken: refreshToken.refreshToken,
     };
   }
 
@@ -126,5 +135,14 @@ export class AuthService {
       accessToken,
       expiresin,
     };
+  }
+
+  async generateRefreshToken(userId: string): Promise<UserRefreshToken> {
+    const refreshToken = `${userId}.${randomBytes(40).toString('hex')}`;
+    return await this.userRefreshToken.create({
+      refreshToken,
+      userId,
+      expiredAt: addDays(new Date(), 7),
+    });
   }
 }

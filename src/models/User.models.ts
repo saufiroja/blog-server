@@ -3,11 +3,13 @@ import {
   CreatedAt,
   DataType,
   DeletedAt,
+  HasMany,
   Model,
   Table,
   TableOptions,
   UpdatedAt,
 } from 'sequelize-typescript';
+import { UserRefreshToken } from './UserRefreshToken.models';
 
 const tableOption: TableOptions = {
   timestamps: true,
@@ -77,4 +79,7 @@ export class User extends Model {
 
   @DeletedAt
   deletedAt: Date;
+
+  @HasMany(() => UserRefreshToken, 'userId')
+  refreshToken: UserRefreshToken[];
 }
