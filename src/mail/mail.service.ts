@@ -37,7 +37,6 @@ export class MailService {
 
   async resendConfirmationEmail(user: any, code: any) {
     const { email } = await user;
-    console.log(email);
     await this.mailerService.sendMail({
       to: email,
       subject: 'Welcome to my App! Confirm Email',
